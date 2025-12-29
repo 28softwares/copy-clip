@@ -3,9 +3,14 @@ import AppKit
 
 class WindowDelegate: NSObject, NSWindowDelegate {
     func windowShouldClose(_ sender: NSWindow) -> Bool {
+        // Ensure menu bar stays visible BEFORE hiding
+        NSApp.setActivationPolicy(.accessory)
+        if let menuBar = MenuBarController.shared {
+            menuBar.ensureMenuBarVisible()
+        }
         // Hide window instead of closing it
         sender.orderOut(nil)
-        // Immediately ensure menu bar stays visible
+        // Immediately ensure menu bar stays visible after hiding
         NSApp.setActivationPolicy(.accessory)
         if let menuBar = MenuBarController.shared {
             menuBar.ensureMenuBarVisible()
@@ -23,6 +28,14 @@ class WindowDelegate: NSObject, NSWindowDelegate {
     
     func windowDidResignKey(_ notification: Notification) {
         // When window loses focus, ensure menu bar stays
+        NSApp.setActivationPolicy(.accessory)
+        if let menuBar = MenuBarController.shared {
+            menuBar.ensureMenuBarVisible()
+        }
+    }
+    
+    func windowDidBecomeKey(_ notification: Notification) {
+        // When window becomes key, ensure menu bar stays
         NSApp.setActivationPolicy(.accessory)
     }
 }

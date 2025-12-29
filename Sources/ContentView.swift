@@ -33,7 +33,25 @@ struct ContentView: View {
                     
                     Button(action: {
                         if let window = NSApplication.shared.windows.first(where: { $0.isVisible }) {
+                            // Ensure menu bar stays visible BEFORE closing
+                            NSApp.setActivationPolicy(.accessory)
+                            if let menuBar = MenuBarController.shared {
+                                menuBar.ensureMenuBarVisible()
+                            }
+                            // Hide window
                             window.orderOut(nil)
+                            // Immediately re-ensure menu bar
+                            NSApp.setActivationPolicy(.accessory)
+                            if let menuBar = MenuBarController.shared {
+                                menuBar.ensureMenuBarVisible()
+                            }
+                            // Also check after a delay
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                NSApp.setActivationPolicy(.accessory)
+                                if let menuBar = MenuBarController.shared {
+                                    menuBar.ensureMenuBarVisible()
+                                }
+                            }
                         }
                     }) {
                         Image(systemName: "xmark.circle.fill")
@@ -101,7 +119,17 @@ struct ContentView: View {
                                 onCopy: {
                                     clipboardManager.copyToClipboard($0)
                                     if let window = NSApplication.shared.windows.first(where: { $0.isVisible }) {
+                                        // Ensure menu bar stays visible BEFORE closing
+                                        NSApp.setActivationPolicy(.accessory)
+                                        if let menuBar = MenuBarController.shared {
+                                            menuBar.ensureMenuBarVisible()
+                                        }
                                         window.orderOut(nil)
+                                        // Re-ensure menu bar after closing
+                                        NSApp.setActivationPolicy(.accessory)
+                                        if let menuBar = MenuBarController.shared {
+                                            menuBar.ensureMenuBarVisible()
+                                        }
                                     }
                                 },
                                 onDelete: { clipboardManager.deleteItem($0) }
@@ -137,14 +165,34 @@ struct ContentView: View {
             KeyEventHandling(
                 onEscape: {
                     if let window = NSApplication.shared.windows.first(where: { $0.isVisible }) {
+                        // Ensure menu bar stays visible BEFORE closing
+                        NSApp.setActivationPolicy(.accessory)
+                        if let menuBar = MenuBarController.shared {
+                            menuBar.ensureMenuBarVisible()
+                        }
                         window.orderOut(nil)
+                        // Re-ensure menu bar after closing
+                        NSApp.setActivationPolicy(.accessory)
+                        if let menuBar = MenuBarController.shared {
+                            menuBar.ensureMenuBarVisible()
+                        }
                     }
                 },
                 onEnter: {
                     if let selected = selectedItem {
                         clipboardManager.copyToClipboard(selected)
                         if let window = NSApplication.shared.windows.first(where: { $0.isVisible }) {
+                            // Ensure menu bar stays visible BEFORE closing
+                            NSApp.setActivationPolicy(.accessory)
+                            if let menuBar = MenuBarController.shared {
+                                menuBar.ensureMenuBarVisible()
+                            }
                             window.orderOut(nil)
+                            // Re-ensure menu bar after closing
+                            NSApp.setActivationPolicy(.accessory)
+                            if let menuBar = MenuBarController.shared {
+                                menuBar.ensureMenuBarVisible()
+                            }
                         }
                     }
                 },

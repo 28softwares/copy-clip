@@ -87,7 +87,8 @@
 			buildPhases = (
 				AA0000120000000000000001 /* Sources */,
 				AA00000C0000000000000001 /* Frameworks */,
-				AA0000130000000000000001 /* Resources */,
+				AA0000130000000000000001 /* Resources */,,
+				AA0000210000000000000001 /* Remove Unwanted Files */,
 			);
 			buildRules = (
 			);
@@ -141,6 +142,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA0000210000000000000001 /* Remove Unwanted Files */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Remove Unwanted Files";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "rm -rf \"${BUILT_PRODUCTS_DIR}/CopyClip.app/Contents/Resources/copy-clip\"\n";
+		};
+
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -303,6 +323,7 @@
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "*.nib *.lproj *.framework *.gch *.xcode* *.xcassets *.icon (*) .DS_Store CVS .svn .git .hg *.pbproj *.pbxproj dist build DerivedData scripts temp_icon.iconset *.dmg *.zip";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Sources/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";

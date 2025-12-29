@@ -1,11 +1,13 @@
 import AppKit
 import Combine
+import ObjectiveC
 
 class MenuBarController {
     private var statusItem: NSStatusItem?
     private let windowController: WindowController
     private let clipboardManager: ClipboardManager
     private var menu: NSMenu?
+    private var menuBarCheckTimer: Timer?
     
     // Keep strong reference to prevent deallocation
     static var shared: MenuBarController?
@@ -16,40 +18,104 @@ class MenuBarController {
         MenuBarController.shared = self
         setupMenuBar()
         observeClipboardChanges()
+        startMenuBarMonitoring()
+    }
+    
+    private func startMenuBarMonitoring() {
+        // Check every 0.5 seconds if menu bar is still visible
+        menuBarCheckTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            self?.ensureMenuBarVisible()
+        }
+        // Make sure timer runs even when window is closed
+        RunLoop.main.add(menuBarCheckTimer!, forMode: .common)
+    }
+    
+    deinit {
+        menuBarCheckTimer?.invalidate()
     }
     
     private func setupMenuBar() {
-        // Remove existing status item if any
-        if statusItem != nil {
-            NSStatusBar.system.removeStatusItem(statusItem!)
+        // Only recreate if status item is truly missing or invalid
+        if let existingItem = statusItem {
+            if let button = existingItem.button, button.image != nil, button.superview != nil {
+                // Status item is still valid, just update menu
+                updateMenu()
+                return
+            }
+            // Remove invalid status item
+            NSStatusBar.system.removeStatusItem(existingItem)
         }
         
+        // Create new status item
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
-        if let button = statusItem?.button {
-            // Use clipboard icon (📋) or system image
-            button.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "CopyClip")
-            button.image?.isTemplate = true
+        guard let button = statusItem?.button else {
+            return
         }
+        
+        // Use clipboard icon
+        button.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "CopyClip")
+        button.image?.isTemplate = true
         
         // Ensure status item persists
         statusItem?.autosaveName = "CopyClipStatusItem"
         
+        // Keep strong references to prevent deallocation
+        button.target = self
+        button.action = #selector(statusItemClicked(_:))
+        
+        // Store reference to prevent deallocation
+        objc_setAssociatedObject(button, "MenuBarController", self, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        
         updateMenu()
     }
     
+    @objc private func statusItemClicked(_ sender: NSStatusBarButton) {
+        // Show menu when clicked
+        statusItem?.menu?.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.frame.height), in: sender)
+    }
+    
     func ensureMenuBarVisible() {
-        // Ensure menu bar icon is still visible
+        // Ensure activation policy keeps menu bar visible FIRST
+        NSApp.setActivationPolicy(.accessory)
+        
+        // Check if status item exists and is valid
+        var needsRecreation = false
+        
         if statusItem == nil {
-            setupMenuBar()
-        } else if statusItem?.button?.image == nil {
-            // Re-setup if icon is missing
-            if let button = statusItem?.button {
+            needsRecreation = true
+        } else if let button = statusItem?.button {
+            // Check if button still has image (if not, it might have been removed)
+            if button.image == nil {
+                // Try to restore image
                 button.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "CopyClip")
                 button.image?.isTemplate = true
+                // If image is still nil after setting, recreate
+                if button.image == nil {
+                    needsRecreation = true
+                }
+            }
+            // Verify button is still in the view hierarchy
+            if button.superview == nil {
+                needsRecreation = true
+            }
+        } else {
+            // Button is nil, need to recreate
+            needsRecreation = true
+        }
+        
+        // Recreate if needed
+        if needsRecreation {
+            // Don't remove the old one if it still exists (to avoid flicker)
+            let oldItem = statusItem
+            setupMenuBar()
+            // Now remove the old one if it's different
+            if let old = oldItem, old !== statusItem {
+                NSStatusBar.system.removeStatusItem(old)
             }
         }
-        // Ensure activation policy keeps menu bar visible
+        
+        // Double-check activation policy
         NSApp.setActivationPolicy(.accessory)
     }
     
