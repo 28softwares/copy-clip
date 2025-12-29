@@ -6,6 +6,7 @@ class ClipboardItem: Identifiable, ObservableObject, Codable, Equatable {
     let content: String
     let timestamp: Date
     let type: ClipboardType
+    var imageData: Data? // Store image as PNG data
     
     enum ClipboardType: String, Codable {
         case text
@@ -13,15 +14,39 @@ class ClipboardItem: Identifiable, ObservableObject, Codable, Equatable {
         case url
     }
     
-    init(content: String, type: ClipboardType = .text) {
+    init(content: String, type: ClipboardType = .text, imageData: Data? = nil) {
         self.id = UUID()
         self.content = content
         self.timestamp = Date()
         self.type = type
+        self.imageData = imageData
     }
     
     static func == (lhs: ClipboardItem, rhs: ClipboardItem) -> Bool {
         return lhs.id == rhs.id
+    }
+    
+    // Custom Codable implementation to handle imageData
+    enum CodingKeys: String, CodingKey {
+        case id, content, timestamp, type, imageData
+    }
+    
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        content = try container.decode(String.self, forKey: .content)
+        timestamp = try container.decode(Date.self, forKey: .timestamp)
+        type = try container.decode(ClipboardType.self, forKey: .type)
+        imageData = try container.decodeIfPresent(Data.self, forKey: .imageData)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(content, forKey: .content)
+        try container.encode(timestamp, forKey: .timestamp)
+        try container.encode(type, forKey: .type)
+        try container.encodeIfPresent(imageData, forKey: .imageData)
     }
 }
 
@@ -55,17 +80,35 @@ class ClipboardManager: ObservableObject {
         if currentChangeCount != changeCount {
             changeCount = currentChangeCount
             
+            // Check for image first (images can also have string representations)
+            if let image = pasteboard.readObjects(forClasses: [NSImage.self], options: nil)?.first as? NSImage {
+                // Convert image to PNG data
+                if let tiffData = image.tiffRepresentation,
+                   let bitmapImage = NSBitmapImageRep(data: tiffData),
+                   let pngData = bitmapImage.representation(using: .png, properties: [:]) {
+                    
+                    // Avoid duplicates - check if same image was just copied
+                    if let lastItem = history.first, 
+                       lastItem.type == .image,
+                       let lastImageData = lastItem.imageData,
+                       lastImageData == pngData {
+                        return
+                    }
+                    
+                    let item = ClipboardItem(content: "Image", type: .image, imageData: pngData)
+                    addToHistory(item)
+                    return
+                }
+            }
+            
+            // Check for text
             if let string = pasteboard.string(forType: .string), !string.isEmpty {
                 // Avoid duplicates if the last item is the same
-                if let lastItem = history.first, lastItem.content == string {
+                if let lastItem = history.first, lastItem.content == string && lastItem.type == .text {
                     return
                 }
                 
                 let item = ClipboardItem(content: string, type: .text)
-                addToHistory(item)
-            } else if let image = pasteboard.readObjects(forClasses: [NSImage.self], options: nil)?.first as? NSImage {
-                // Handle image (store as base64 or reference)
-                let item = ClipboardItem(content: "Image", type: .image)
                 addToHistory(item)
             }
         }
@@ -86,7 +129,15 @@ class ClipboardManager: ObservableObject {
     
     func copyToClipboard(_ item: ClipboardItem) {
         pasteboard.clearContents()
-        pasteboard.setString(item.content, forType: .string)
+        
+        if item.type == .image, let imageData = item.imageData, let image = NSImage(data: imageData) {
+            // Copy image to clipboard
+            pasteboard.writeObjects([image])
+        } else {
+            // Copy text to clipboard
+            pasteboard.setString(item.content, forType: .string)
+        }
+        
         changeCount = pasteboard.changeCount
     }
     

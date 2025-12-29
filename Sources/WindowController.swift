@@ -5,11 +5,24 @@ class WindowDelegate: NSObject, NSWindowDelegate {
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         // Hide window instead of closing it
         sender.orderOut(nil)
+        // Immediately ensure menu bar stays visible
+        NSApp.setActivationPolicy(.accessory)
+        if let menuBar = MenuBarController.shared {
+            menuBar.ensureMenuBarVisible()
+        }
         return false
     }
     
     func windowWillClose(_ notification: Notification) {
         // Ensure app stays running and menu bar stays active
+        NSApp.setActivationPolicy(.accessory)
+        if let menuBar = MenuBarController.shared {
+            menuBar.ensureMenuBarVisible()
+        }
+    }
+    
+    func windowDidResignKey(_ notification: Notification) {
+        // When window loses focus, ensure menu bar stays
         NSApp.setActivationPolicy(.accessory)
     }
 }
@@ -26,6 +39,12 @@ class WindowController: ObservableObject {
     func toggleWindow() {
         if let window = window, window.isVisible {
             window.orderOut(nil)
+            // Ensure menu bar stays visible after closing window
+            NSApp.setActivationPolicy(.accessory)
+            // Re-ensure menu bar controller is still active
+            if let menuBar = MenuBarController.shared {
+                menuBar.ensureMenuBarVisible()
+            }
         } else {
             showWindow()
         }

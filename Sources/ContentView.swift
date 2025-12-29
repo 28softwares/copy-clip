@@ -188,15 +188,32 @@ struct ClipboardItemRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(item.content)
-                    .lineLimit(3)
-                    .font(.system(size: 13))
-                    .foregroundColor(.primary)
+                if item.type == .image, let imageData = item.imageData, let nsImage = NSImage(data: imageData) {
+                    // Display image thumbnail
+                    Image(nsImage: nsImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxWidth: 200, maxHeight: 100)
+                        .cornerRadius(4)
+                } else {
+                    // Display text
+                    Text(item.content)
+                        .lineLimit(3)
+                        .font(.system(size: 13))
+                        .foregroundColor(.primary)
+                }
                 
-                Text(item.timestamp, style: .relative)
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
-                    .id(timeRefreshTrigger) // Force refresh every 10 seconds
+                HStack {
+                    if item.type == .image {
+                        Image(systemName: "photo")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                    }
+                    Text(item.timestamp, style: .relative)
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                        .id(timeRefreshTrigger) // Force refresh every 10 seconds
+                }
             }
             
             Spacer()

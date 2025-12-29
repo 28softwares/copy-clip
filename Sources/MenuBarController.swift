@@ -19,6 +19,11 @@ class MenuBarController {
     }
     
     private func setupMenuBar() {
+        // Remove existing status item if any
+        if statusItem != nil {
+            NSStatusBar.system.removeStatusItem(statusItem!)
+        }
+        
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
         if let button = statusItem?.button {
@@ -31,6 +36,21 @@ class MenuBarController {
         statusItem?.autosaveName = "CopyClipStatusItem"
         
         updateMenu()
+    }
+    
+    func ensureMenuBarVisible() {
+        // Ensure menu bar icon is still visible
+        if statusItem == nil {
+            setupMenuBar()
+        } else if statusItem?.button?.image == nil {
+            // Re-setup if icon is missing
+            if let button = statusItem?.button {
+                button.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "CopyClip")
+                button.image?.isTemplate = true
+            }
+        }
+        // Ensure activation policy keeps menu bar visible
+        NSApp.setActivationPolicy(.accessory)
     }
     
     private func observeClipboardChanges() {
@@ -58,11 +78,29 @@ class MenuBarController {
         } else {
             for (index, item) in historyItems.enumerated() {
                 let menuItem = NSMenuItem()
-                menuItem.title = truncateText(item.content, maxLength: 50)
+                
+                if item.type == .image {
+                    // For images, show thumbnail and label
+                    menuItem.title = "📷 Image"
+                    if let imageData = item.imageData, let image = NSImage(data: imageData) {
+                        // Create thumbnail (max 64x64)
+                        let thumbnail = NSImage(size: NSSize(width: 64, height: 64))
+                        thumbnail.lockFocus()
+                        image.draw(in: NSRect(x: 0, y: 0, width: 64, height: 64),
+                                  from: NSRect.zero,
+                                  operation: .sourceOver,
+                                  fraction: 1.0)
+                        thumbnail.unlockFocus()
+                        menuItem.image = thumbnail
+                    }
+                } else {
+                    menuItem.title = truncateText(item.content, maxLength: 50)
+                }
+                
                 menuItem.action = #selector(copyItem(_:))
                 menuItem.target = self
                 menuItem.representedObject = item
-                menuItem.toolTip = item.content
+                menuItem.toolTip = item.type == .image ? "Image" : item.content
                 menu?.addItem(menuItem)
             }
         }

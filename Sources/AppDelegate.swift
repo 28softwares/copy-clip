@@ -35,7 +35,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         // Don't quit when window closes - keep menu bar running
+        // Ensure menu bar stays visible
+        NSApp.setActivationPolicy(.accessory)
+        menuBarController?.ensureMenuBarVisible()
         return false
+    }
+    
+    func applicationDidBecomeActive(_ notification: Notification) {
+        // Ensure menu bar stays visible when app becomes active
+        NSApp.setActivationPolicy(.accessory)
+        menuBarController?.ensureMenuBarVisible()
+    }
+    
+    func applicationDidResignActive(_ notification: Notification) {
+        // Ensure menu bar stays visible when app resigns active
+        NSApp.setActivationPolicy(.accessory)
+        menuBarController?.ensureMenuBarVisible()
     }
 }
 
