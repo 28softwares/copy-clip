@@ -34,22 +34,37 @@ class KeyView: NSView {
     var onDown: (() -> Void)?
     var onDelete: (() -> Void)?
     
-    override var acceptsFirstResponder: Bool { true }
+    // Don't accept first responder - let TextField handle it
+    override var acceptsFirstResponder: Bool { false }
     
-    override func keyDown(with event: NSEvent) {
-        switch event.keyCode {
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        // Check if a text field is currently editing
+        if let firstResponder = self.window?.firstResponder,
+           firstResponder is NSTextView || firstResponder is NSTextField {
+            // Let text field handle it
+            return false
+        }
+        
+        // Only handle navigation keys when not in text field
+        let keyCode = event.keyCode
+        switch keyCode {
         case 53: // Escape
             onEscape?()
+            return true
         case 36: // Enter
             onEnter?()
+            return true
         case 126: // Up Arrow
             onUp?()
+            return true
         case 125: // Down Arrow
             onDown?()
+            return true
         case 51: // Delete/Backspace
             onDelete?()
+            return true
         default:
-            super.keyDown(with: event)
+            return false
         }
     }
 }

@@ -17,6 +17,8 @@
 		AA00000D0000000000000002 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA00000D0000000000000001 /* Assets.xcassets */; };
 		AA00000F0000000000000002 /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000E0000000000000002 /* MenuBarController.swift */; };
 		AA0000200000000000000001 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = AA0000100000000000000002 /* AppIcon.icns */; };
+		AA0000220000000000000001 /* KeyboardShortcutHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000210000000000000002 /* KeyboardShortcutHandler.swift */; };
+		AA0000230000000000000001 /* KeyboardShortcutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000230000000000000002 /* KeyboardShortcutView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +34,8 @@
 		AA00000D0000000000000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AA00000E0000000000000002 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
 		AA0000100000000000000002 /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
+		AA0000210000000000000002 /* KeyboardShortcutHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutHandler.swift; sourceTree = "<group>"; };
+		AA0000230000000000000002 /* KeyboardShortcutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,6 +68,8 @@
 				AA00000B0000000000000003 /* KeyEventHandling.swift */,
 				AA00000C0000000000000003 /* AppDelegate.swift */,
 				AA00000E0000000000000002 /* MenuBarController.swift */,
+				AA0000210000000000000002 /* KeyboardShortcutHandler.swift */,
+				AA0000230000000000000002 /* KeyboardShortcutView.swift */,
 				AA0000100000000000000002 /* AppIcon.icns */,
 				AA00000B0000000000000001 /* Info.plist */,
 			);
@@ -87,7 +93,7 @@
 			buildPhases = (
 				AA0000120000000000000001 /* Sources */,
 				AA00000C0000000000000001 /* Frameworks */,
-				AA0000130000000000000001 /* Resources */,,
+				AA0000130000000000000001 /* Resources */,
 				AA0000210000000000000001 /* Remove Unwanted Files */,
 			);
 			buildRules = (
@@ -176,6 +182,8 @@
 				AA00000B0000000000000002 /* KeyEventHandling.swift in Sources */,
 				AA00000C0000000000000002 /* AppDelegate.swift in Sources */,
 				AA00000F0000000000000002 /* MenuBarController.swift in Sources */,
+				AA0000220000000000000001 /* KeyboardShortcutHandler.swift in Sources */,
+				AA0000230000000000000001 /* KeyboardShortcutView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

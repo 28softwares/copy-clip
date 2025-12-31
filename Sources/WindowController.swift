@@ -1,6 +1,13 @@
 import SwiftUI
 import AppKit
 
+class KeyboardWindow: NSWindow {
+    override var acceptsFirstResponder: Bool { true }
+    override func makeFirstResponder(_ responder: NSResponder?) -> Bool {
+        return super.makeFirstResponder(responder)
+    }
+}
+
 class WindowDelegate: NSObject, NSWindowDelegate {
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         // Ensure menu bar stays visible BEFORE hiding
@@ -35,8 +42,9 @@ class WindowDelegate: NSObject, NSWindowDelegate {
     }
     
     func windowDidBecomeKey(_ notification: Notification) {
-        // When window becomes key, ensure menu bar stays
-        NSApp.setActivationPolicy(.accessory)
+        // When window becomes key, keep as regular to allow keyboard input
+        // We'll change back to accessory when window closes
+        NSApp.setActivationPolicy(.regular)
     }
 }
 
@@ -52,7 +60,7 @@ class WindowController: ObservableObject {
     func toggleWindow() {
         if let window = window, window.isVisible {
             window.orderOut(nil)
-            // Ensure menu bar stays visible after closing window
+            // Change back to accessory mode to hide dock icon
             NSApp.setActivationPolicy(.accessory)
             // Re-ensure menu bar controller is still active
             if let menuBar = MenuBarController.shared {
@@ -68,7 +76,7 @@ class WindowController: ObservableObject {
             let contentView = ContentView(clipboardManager: clipboardManager)
             let hostingView = NSHostingView(rootView: contentView)
             
-            window = NSWindow(
+            window = KeyboardWindow(
                 contentRect: NSRect(x: 0, y: 0, width: 450, height: 500),
                 styleMask: [.borderless, .fullSizeContentView],
                 backing: .buffered,
@@ -93,12 +101,22 @@ class WindowController: ObservableObject {
             window?.setFrameOrigin(NSPoint(x: x, y: y))
         }
         
+        // Temporarily change to regular activation to allow keyboard input
+        // This is necessary for TextField to work properly
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+        
+        // Make window key and order front so it can accept keyboard input
         window?.makeKeyAndOrderFront(nil)
-        window?.makeFirstResponder(window?.contentView)
-        // Don't activate app - keep menu bar active in background
-        NSApp.activate(ignoringOtherApps: false)
-        // Ensure activation policy stays as accessory (menu bar only)
-        NSApp.setActivationPolicy(.accessory)
+        
+        // Ensure window accepts keyboard events
+        window?.acceptsMouseMovedEvents = true
+        window?.isMovableByWindowBackground = false
+        
+        // Make window key
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.window?.makeKey()
+        }
     }
 }
 
